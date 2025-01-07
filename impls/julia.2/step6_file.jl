@@ -74,14 +74,23 @@ const repl_env = Env()
 for binding in MalCore.ns
     env_set!(repl_env, binding[1], binding[2])
 end
-rep("(def! not (fn* (a) (if a false true)))", repl_env)
 
-for line in REPLInput(eachline())
-    try
-        println(rep(line, repl_env))
-    catch error
-        if error != Reader.NoValues()
-            println("Error: ", error)
+env_set!(repl_env, :eval, ast -> EVAL(ast, repl_env))
+env_set!(repl_env, Symbol("*ARGV*"), ARGS[2:end])
+
+rep("(def! not (fn* (a) (if a false true)))", repl_env)
+rep("(def! load-file (fn* (f) (eval (read-string (str \"(do \" (slurp f) \"\\nnil)\")))))", repl_env)
+
+if isempty(ARGS)
+    for line in REPLInput(eachline())
+        try
+            println(rep(line, repl_env))
+        catch error
+            if error != Reader.NoValues()
+                println("Error: ", error)
+            end
         end
     end
+else
+    rep("(load-file \"$(ARGS[1])\")", repl_env)
 end

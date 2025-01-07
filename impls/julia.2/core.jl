@@ -1,10 +1,14 @@
 module MalCore
-include("printer.jl")
+import ..Reader
+import ..Printer
+import ..Types
 
 equal(a, b) = typeof(a) == typeof(b) && a == b
 equal(a::Vector, b::Vector) = length(a) == length(b) && all(splat(equal), zip(a, b))
 equal(a::Vector, b::Tuple) = equal(a, [b...])
 equal(a::Tuple, b::Vector) = equal([a...], b)
+
+read_file(filename) = open(io -> read(io, String), filename)
 
 const ns = Dict(
     :(=) => (head, tail...) -> all(value -> equal(head, value), tail),
@@ -24,5 +28,15 @@ const ns = Dict(
     Symbol("list?") => arg -> arg isa Vector,
     Symbol("empty?") => isempty,
     :count => arg -> isnothing(arg) ? 0 : length(arg),
+    Symbol("read-string") => Reader.read_str,
+    :slurp => read_file,
+    :atom => Types.MalAtom,
+    Symbol("atom?") => atom -> atom isa Types.MalAtom,
+    :deref => atom -> atom.value,
+    :reset! => (atom, value) -> atom.value = value,
+    :swap! => (atom, fn, args...) ->
+        let fn = fn isa Types.MalFunction ? fn.fn : fn
+            atom.value = fn(atom.value, args...)
+        end,
 )
 end

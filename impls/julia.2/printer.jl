@@ -1,5 +1,8 @@
 module Printer
+import ..Types
+
 pr_str(value; args...) = string(value)
+pr_str(atom::Types.MalAtom; print_readably=true) = "(atom $(pr_str(atom.value; print_readably)))"
 pr_str(str::String; print_readably=true) =
     if startswith(str, '\u29e')
         ":$(str[3:end])"

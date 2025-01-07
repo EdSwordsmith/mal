@@ -5,4 +5,8 @@ struct MalFunction <: Function
     env
     fn
 end
+
+mutable struct MalAtom
+    value
+end
 end
