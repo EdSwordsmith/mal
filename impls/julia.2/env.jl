@@ -2,8 +2,18 @@ struct Env
     outer
     data
 
-    Env() = new(nothing, Dict())
-    Env(outer) = new(outer, Dict())
+    Env(outer=nothing, binds=[], exprs=[]) =
+        let env = new(outer, Dict())
+            for (i, bind) in pairs(binds)
+                if bind == :&
+                    env_set!(env, binds[i+1], exprs[i:end])
+                    break
+                else
+                    env_set!(env, bind, exprs[i])
+                end
+            end
+            env
+        end
 end
 
 env_set!(env::Env, key, value) = env.data[key] = value
