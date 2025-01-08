@@ -5,14 +5,14 @@ import ..Types
 
 const Sequence = Union{Vector,Tuple}
 list(list::Vector) = list
-list(vec::Tuple) = [vec...]
+list(vec::Tuple) = Any[vec...]
 
 equal(a, b) = typeof(a) == typeof(b) && a == b
 equal(a::Sequence, b::Sequence) = length(a) == length(b) && all(splat(equal), zip(a, b))
 
 read_file(filename) = open(io -> read(io, String), filename)
 
-cons(value, seq::Sequence) = [value, seq...]
+cons(value, seq::Sequence) = Any[value, seq...]
 concat(seqs::Sequence...) = vcat(map(list, seqs)...)
 
 const ns = Dict(
@@ -29,7 +29,7 @@ const ns = Dict(
     :(-) => -,
     :(*) => *,
     :(/) => (args...) -> reduce(div, args),
-    :list => (args...) -> [args...],
+    :list => (args...) -> list(args),
     Symbol("list?") => arg -> arg isa Vector,
     Symbol("empty?") => isempty,
     :count => arg -> isnothing(arg) ? 0 : length(arg),
@@ -46,5 +46,9 @@ const ns = Dict(
     :concat => concat,
     :cons => cons,
     :vec => list -> tuple(list...),
+    :nth => (list, index) -> list[index+1],
+    :first => list -> isnothing(list) || isempty(list) ? nothing : list[1],
+    :rest => seq -> isnothing(seq) ? [] : list(seq[2:end]),
+    Symbol("macro?") => fn -> fn isa Types.MalFunction && fn.ismacro,
 )
 end
