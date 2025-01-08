@@ -1,4 +1,5 @@
 include("readline.jl")
+include("types.jl")
 include("reader.jl")
 include("printer.jl")
 

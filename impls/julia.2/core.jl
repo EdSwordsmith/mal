@@ -3,12 +3,17 @@ import ..Reader
 import ..Printer
 import ..Types
 
+const Sequence = Union{Vector,Tuple}
+list(list::Vector) = list
+list(vec::Tuple) = [vec...]
+
 equal(a, b) = typeof(a) == typeof(b) && a == b
-equal(a::Vector, b::Vector) = length(a) == length(b) && all(splat(equal), zip(a, b))
-equal(a::Vector, b::Tuple) = equal(a, [b...])
-equal(a::Tuple, b::Vector) = equal([a...], b)
+equal(a::Sequence, b::Sequence) = length(a) == length(b) && all(splat(equal), zip(a, b))
 
 read_file(filename) = open(io -> read(io, String), filename)
+
+cons(value, seq::Sequence) = [value, seq...]
+concat(seqs::Sequence...) = vcat(map(list, seqs)...)
 
 const ns = Dict(
     :(=) => (head, tail...) -> all(value -> equal(head, value), tail),
@@ -38,5 +43,8 @@ const ns = Dict(
         let fn = fn isa Types.MalFunction ? fn.fn : fn
             atom.value = fn(atom.value, args...)
         end,
+    :concat => concat,
+    :cons => cons,
+    :vec => list -> tuple(list...),
 )
 end
